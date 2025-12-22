@@ -95,7 +95,7 @@ create_avd() {
     echo ""
     
     # Prompt for AVD name
-    read -p "Enter AVD name: " avd_name
+    read -r -p "Enter AVD name: " avd_name
     if [ -z "$avd_name" ]; then
         echo -e "${RED}Error: AVD name cannot be empty${NC}"
         return 1
@@ -108,7 +108,7 @@ create_avd() {
     fi
     
     # Prompt for package
-    read -p "Enter system image package (e.g., system-images;android-33;google_apis;x86_64): " package
+    read -r -p "Enter system image package (e.g., system-images;android-33;google_apis;x86_64): " package
     if [ -z "$package" ]; then
         echo -e "${RED}Error: Package cannot be empty${NC}"
         return 1
@@ -118,14 +118,12 @@ create_avd() {
     echo -e "${YELLOW}Available device types:${NC}"
     avdmanager list device | grep "id:" | head -10
     echo ""
-    read -p "Enter device type (e.g., pixel_5) [default: pixel]: " device
+    read -r -p "Enter device type (e.g., pixel_5) [default: pixel]: " device
     device="${device:-pixel}"
     
     # Create the AVD
     echo -e "${YELLOW}Creating AVD '$avd_name'...${NC}"
-    echo "no" | avdmanager create avd -n "$avd_name" -k "$package" -d "$device"
-    
-    if [ $? -eq 0 ]; then
+    if echo "no" | avdmanager create avd -n "$avd_name" -k "$package" -d "$device"; then
         echo -e "${GREEN}Successfully created AVD '$avd_name'${NC}"
     else
         echo -e "${RED}Failed to create AVD '$avd_name'${NC}"
@@ -170,7 +168,8 @@ stop_avd() {
     echo -e "${YELLOW}Stopping AVD '$avd_name'...${NC}"
     
     # Find the emulator process
-    local pids=$(pgrep -f "emulator.*-avd $avd_name")
+    local pids
+    pids=$(pgrep -f "emulator.*-avd $avd_name")
     
     if [ -z "$pids" ]; then
         echo -e "${YELLOW}No running instance of AVD '$avd_name' found${NC}"
@@ -200,16 +199,14 @@ delete_avd() {
     fi
     
     # Confirm deletion
-    read -p "Are you sure you want to delete AVD '$avd_name'? (y/N): " confirm
+    read -r -p "Are you sure you want to delete AVD '$avd_name'? (y/N): " confirm
     if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
         echo -e "${YELLOW}Deletion cancelled${NC}"
         return 0
     fi
     
     echo -e "${YELLOW}Deleting AVD '$avd_name'...${NC}"
-    avdmanager delete avd -n "$avd_name"
-    
-    if [ $? -eq 0 ]; then
+    if avdmanager delete avd -n "$avd_name"; then
         echo -e "${GREEN}Successfully deleted AVD '$avd_name'${NC}"
     else
         echo -e "${RED}Failed to delete AVD '$avd_name'${NC}"
