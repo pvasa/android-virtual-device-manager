@@ -435,6 +435,19 @@ install_apk() {
     pause; tput civis
 }
 
+update_script() {
+    print_step "Update Script"
+    local install_url="https://raw.githubusercontent.com/pvasa/android-virtual-device-manager/main/install.sh"
+    print_header "Downloading and running installer..."
+    if curl -fsSL "$install_url" | bash; then
+        print_success "Update complete."
+        exit 0
+    else
+        print_err "Update failed."
+    fi
+    pause
+}
+
 # --- Menus ---
 
 toolbox_menu() {
@@ -471,12 +484,13 @@ while true; do
     echo -e "   ${DIM}OS:${NC} $OS_TYPE   ${DIM}Status:${NC} $EMU_STATUS"
     echo -e "\n  ${BOLD}MAIN MENU${NC}"
     echo -e "  ${WHITE}[1]${NC} 🚀 Launch Emulator"
-    echo -e "  ${WHITE}[2]${NC} 💻 Developer Tools"
-    echo -e "  ${WHITE}[3]${NC} 🛠  Toolbox"
-    echo -e "  ${WHITE}[4]${NC} 📱 Create New Device"
+    echo -e "  ${WHITE}[2]${NC} 📱 Create New Device"
+    echo -e "  ${WHITE}[3]${NC} 💻 Developer Tools"
+    echo -e "  ${WHITE}[4]${NC} 🛠  Toolbox"
     echo -e "  ${WHITE}[5]${NC} ⚙  Update SDK"
+    echo -e "  ${WHITE}[6]${NC} 🔄 Update Script"
     echo -e "  ${WHITE}[0]${NC} 👋 Quit"
     echo -e ""
     read -s -n 1 key
-    case $key in 1) launch_detached ;; 2) dev_menu ;; 3) toolbox_menu ;; 4) create_new_device ;; 5) install_sdk ;; 0|q|$'\e') cleanup ;; esac
+    case $key in 1) launch_detached ;; 2) create_new_device ;; 3) dev_menu ;; 4) toolbox_menu ;; 5) install_sdk ;; 6) update_script ;; 0|q|$'\e') cleanup ;; esac
 done

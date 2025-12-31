@@ -42,12 +42,10 @@ if ! head -n1 "$TEMPFILE" | grep -q '^#!/bin/bash'; then
 fi
 
 if [[ -f "$TARGET" ]]; then
-    echo "android-manager already installed at $TARGET. Skipping."
-    rm -f "$TEMPFILE"
-    exit 0
+    echo "Updating android-manager at $TARGET..."
+else
+    echo "Installing android-manager to $TARGET (no sudo needed)..."
 fi
-
-echo "Installing android-manager to $TARGET (no sudo needed)..."
 
 cp "$TEMPFILE" "$TARGET"
 chmod +x "$TARGET"
