@@ -26,10 +26,11 @@ detect_os
 mkdir -p "$TARGET_DIR"
 
 TEMPFILE=$(mktemp)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [[ -f "./android-manager.sh" ]]; then
+if [[ -f "$SCRIPT_DIR/android-manager.sh" ]]; then
     echo "Using local android-manager.sh..."
-    cp "./android-manager.sh" "$TEMPFILE"
+    cp "$SCRIPT_DIR/android-manager.sh" "$TEMPFILE"
 else
     # Download the script
     if ! curl -fsSL "$URL" -o "$TEMPFILE"; then

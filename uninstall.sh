@@ -31,6 +31,15 @@ echo "Uninstalling android-manager from $TARGET..."
 
 rm "$TARGET"
 
+CONFIG_FILE="$HOME/.android_manager_config"
+if [[ -f "$CONFIG_FILE" ]]; then
+    read -r -p "Remove configuration file ($CONFIG_FILE)? (y/N): " remove_config
+    if [[ "$remove_config" =~ ^[Yy]$ ]]; then
+        rm "$CONFIG_FILE"
+        echo "Configuration file removed."
+    fi
+fi
+
 echo "✅ Uninstalled successfully."
 echo ""
 echo "Optional: Remove PATH export from your shell profile (~/.zshrc, ~/.bashrc, etc.):"

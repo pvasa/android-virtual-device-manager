@@ -118,7 +118,7 @@ check_first_run() {
         clear
         echo -e "\n  ${YELLOW}⚠  Android SDK not found${NC}"
         echo -ne "  Enter custom path (or Enter to install): "
-        read custom_path
+        read -r custom_path
         if [ -n "$custom_path" ]; then
             export ANDROID_HOME="$custom_path"
             CMD_LINE_TOOLS_ROOT="$ANDROID_HOME/cmdline-tools/latest"
@@ -155,7 +155,7 @@ select_avd_interactive() {
     done
     echo -e "  ${DIM}└───────────────────────────────────────┘${NC}"
     
-    read -p "  $prompt_text: " input_str
+    read -r -p "  $prompt_text: " input_str
     tput civis
     if [[ -z "$input_str" ]] || [[ "$input_str" == "0" ]]; then return 1; fi
 
@@ -188,7 +188,7 @@ select_running_device() {
         ((count++))
     done
     echo -e "  ${DIM}└───────────────────────────────────────┘${NC}"
-    read -p "  Select Target: " sel; tput civis
+    read -r -p "  Select Target: " sel; tput civis
     if [[ "$sel" =~ ^[0-9]+$ ]] && [ "$sel" -ge 1 ] && [ "$sel" -le ${#device_list[@]} ]; then
         SELECTED_DEVICE="${device_list[$((sel-1))]}"
         return 0
@@ -260,11 +260,12 @@ install_sdk() {
             if curl -L --fail -o tools.zip "$tools_url"; then
                  unzip -q tools.zip -d temp_sdk
                  mkdir -p "$ANDROID_HOME/cmdline-tools"
+                 rm -rf "$ANDROID_HOME/cmdline-tools/latest"
                  mv temp_sdk/cmdline-tools "$ANDROID_HOME/cmdline-tools/latest"
                  rm -rf temp_sdk tools.zip; break
             else
                  print_err "Download failed."
-                 read -p "  Enter new version ID or 'q': " new_ver
+                 read -r -p "  Enter new version ID or 'q': " new_ver
                  if [[ "$new_ver" == "q" ]]; then exit 1; fi
                  if [[ -n "$new_ver" ]]; then CMD_TOOLS_VER="$new_ver"; save_config; fi
             fi
@@ -286,7 +287,7 @@ create_new_device() {
     IFS=$'\n' read -rd '' -a dev_arr <<< "$AVAILABLE_DEVICES"
     count=1
     for device in "${dev_arr[@]}"; do echo -e "     [$count] $device"; ((count++)); done
-    read -p "  Select Profile [1]: " sel; sel="${sel:-1}" 
+    read -r -p "  Select Profile [1]: " sel; sel="${sel:-1}"
     if ! [[ "$sel" =~ ^[0-9]+$ ]]; then sel=1; fi
     CHOSEN_ID="${dev_arr[$((sel-1))]}"
     
@@ -294,7 +295,7 @@ create_new_device() {
     echo -e "\n  ${BOLD}2. Image Type${NC}"
     echo -e "     [1] Standard (Root capable)"
     echo -e "     [2] Play Store (No Root)"
-    read -p "  Select Type [1]: " type_sel
+    read -r -p "  Select Type [1]: " type_sel
     local tag="google_apis"; local tag_display="API"
     if [ "$type_sel" == "2" ]; then tag="google_apis_playstore"; tag_display="PlayStore"; fi
 
@@ -309,7 +310,7 @@ create_new_device() {
         for api in "${apis[@]}"; do echo -e "     [$count] API ${api#android-} (Installed)"; ((count++)); done
     fi
     echo -e "     [0] Download New (Default: API $DEFAULT_API)"
-    read -p "  Select API [1]: " api_sel; api_sel="${api_sel:-1}"
+    read -r -p "  Select API [1]: " api_sel; api_sel="${api_sel:-1}"
     if [ "$api_sel" == "0" ]; then API_CHOICE="$DEFAULT_API"
     elif [[ "$api_sel" =~ ^[0-9]+$ ]] && [ "$api_sel" -le ${#apis[@]} ]; then
          raw="${apis[$((api_sel-1))]}"; API_CHOICE="${raw#android-}"
@@ -317,12 +318,12 @@ create_new_device() {
 
     # 4. Config
     echo -e "\n  ${BOLD}4. Specs${NC}"
-    read -p "  RAM (MB) [4096]: " input_ram; RAM_SIZE=$(echo "$input_ram" | tr -cd '0-9'); RAM_SIZE="${RAM_SIZE:-4096}"
-    read -p "  Storage (MB) [8192]: " input_storage; STORAGE_SIZE=$(echo "$input_storage" | tr -cd '0-9'); STORAGE_SIZE="${STORAGE_SIZE:-8192}"
+    read -r -p "  RAM (MB) [4096]: " input_ram; RAM_SIZE=$(echo "$input_ram" | tr -cd '0-9'); RAM_SIZE="${RAM_SIZE:-4096}"
+    read -r -p "  Storage (MB) [8192]: " input_storage; STORAGE_SIZE=$(echo "$input_storage" | tr -cd '0-9'); STORAGE_SIZE="${STORAGE_SIZE:-8192}"
 
     AVD_NAME="${CHOSEN_ID// /_}_${tag_display}_API${API_CHOICE}"
     echo -e "\n  ${DIM}Creating: $AVD_NAME${NC}"
-    read -p "  Confirm? (Y/n): " confirm; confirm="${confirm:-y}"
+    read -r -p "  Confirm? (Y/n): " confirm; confirm="${confirm:-y}"
     if [[ ! "$confirm" =~ ^[Yy]$ ]]; then return; fi
 
     print_header "Checking System Image..."
@@ -393,8 +394,8 @@ record_video() {
 pair_wireless() {
     print_step "ADB Wireless Pairing"
     tput cnorm; echo -e "  ${DIM}Dev Options > Wireless Debugging > Pair with Code${NC}"
-    read -p "  IP:Port: " ip_port
-    read -p "  Code: " code
+    read -r -p "  IP:Port: " ip_port
+    read -r -p "  Code: " code
     if [ -n "$ip_port" ] && [ -n "$code" ]; then
         "$ADB" pair "$ip_port" "$code"
         print_success "Pairing sent. Run 'adb connect IP:PORT' if needed."
@@ -416,10 +417,10 @@ view_logs() {
     tput cnorm
     echo -e "  ${WHITE}[1]${NC} All Error Logs"
     echo -e "  ${WHITE}[2]${NC} Filter by App"
-    read -p "  Mode [1]: " mode
+    read -r -p "  Mode [1]: " mode
     trap 'return' INT
     if [ "$mode" == "2" ]; then
-        read -p "  Package: " pkg
+        read -r -p "  Package: " pkg
         pid=$("$ADB" -s "$SELECTED_DEVICE" shell pidof -s "$pkg")
         if [ -n "$pid" ]; then "$ADB" -s "$SELECTED_DEVICE" logcat --pid="$pid" -v color; else print_err "App not running."; fi
     else "$ADB" -s "$SELECTED_DEVICE" logcat -v color *:E; fi
@@ -437,9 +438,11 @@ install_apk() {
 
 update_script() {
     print_step "Update Script"
-    if [ -f "./install.sh" ]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [ -f "./install.sh" ] || [ -f "$SCRIPT_DIR/install.sh" ]; then
+        if [ -f "./install.sh" ]; then INSTALLER="./install.sh"; else INSTALLER="$SCRIPT_DIR/install.sh"; fi
         print_header "Running local installer..."
-        if bash ./install.sh; then
+        if bash "$INSTALLER"; then
             print_success "Update complete. Restarting..."
             exec "$0"
         else
@@ -461,10 +464,12 @@ update_script() {
 uninstall_script() {
     print_step "Uninstall Script"
     echo -e "  ${RED}⚠  This will remove the 'android-manager' command from your system.${NC}"
-    read -p "  Are you sure? (y/N): " confirm
+    read -r -p "  Are you sure? (y/N): " confirm
     if [[ "$confirm" =~ ^[Yy]$ ]]; then
-        if [ -f "./uninstall.sh" ]; then
-            bash ./uninstall.sh
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        if [ -f "./uninstall.sh" ] || [ -f "$SCRIPT_DIR/uninstall.sh" ]; then
+            if [ -f "./uninstall.sh" ]; then UNINSTALLER="./uninstall.sh"; else UNINSTALLER="$SCRIPT_DIR/uninstall.sh"; fi
+            bash "$UNINSTALLER"
             exit 0
         else
             local uninstall_url="https://raw.githubusercontent.com/pvasa/android-virtual-device-manager/main/uninstall.sh"
