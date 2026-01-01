@@ -27,16 +27,21 @@ mkdir -p "$TARGET_DIR"
 
 TEMPFILE=$(mktemp)
 
-# Download the script
-if ! curl -fsSL "$URL" -o "$TEMPFILE"; then
-    echo "Error: Failed to download $URL" >&2
-    rm -f "$TEMPFILE"
-    exit 1
+if [[ -f "./android-manager.sh" ]]; then
+    echo "Using local android-manager.sh..."
+    cp "./android-manager.sh" "$TEMPFILE"
+else
+    # Download the script
+    if ! curl -fsSL "$URL" -o "$TEMPFILE"; then
+        echo "Error: Failed to download $URL" >&2
+        rm -f "$TEMPFILE"
+        exit 1
+    fi
 fi
 
 # Verify it's a bash script
 if ! head -n1 "$TEMPFILE" | grep -q '^#!/bin/bash'; then
-    echo "Error: Downloaded file is not a valid bash script" >&2
+    echo "Error: File is not a valid bash script" >&2
     rm -f "$TEMPFILE"
     exit 1
 fi

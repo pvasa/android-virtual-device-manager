@@ -437,13 +437,46 @@ install_apk() {
 
 update_script() {
     print_step "Update Script"
-    local install_url="https://raw.githubusercontent.com/pvasa/android-virtual-device-manager/main/install.sh"
-    print_header "Downloading and running installer..."
-    if curl -fsSL "$install_url" | bash; then
-        print_success "Update complete."
-        exit 0
+    if [ -f "./install.sh" ]; then
+        print_header "Running local installer..."
+        if bash ./install.sh; then
+            print_success "Update complete. Restarting..."
+            exec "$0"
+        else
+            print_err "Update failed."
+        fi
     else
-        print_err "Update failed."
+        local install_url="https://raw.githubusercontent.com/pvasa/android-virtual-device-manager/main/install.sh"
+        print_header "Downloading and running installer..."
+        if curl -fsSL "$install_url" | bash; then
+            print_success "Update complete. Restarting..."
+            exec "$0"
+        else
+            print_err "Update failed."
+        fi
+    fi
+    pause
+}
+
+uninstall_script() {
+    print_step "Uninstall Script"
+    echo -e "  ${RED}⚠  This will remove the 'android-manager' command from your system.${NC}"
+    read -p "  Are you sure? (y/N): " confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        if [ -f "./uninstall.sh" ]; then
+            bash ./uninstall.sh
+            exit 0
+        else
+            local uninstall_url="https://raw.githubusercontent.com/pvasa/android-virtual-device-manager/main/uninstall.sh"
+            print_header "Downloading and running uninstaller..."
+            if curl -fsSL "$uninstall_url" | bash; then
+                exit 0
+            else
+                print_err "Uninstall failed."
+            fi
+        fi
+    else
+        print_header "Uninstall cancelled."
     fi
     pause
 }
@@ -489,8 +522,9 @@ while true; do
     echo -e "  ${WHITE}[4]${NC} 🛠  Toolbox"
     echo -e "  ${WHITE}[5]${NC} ⚙  Update SDK"
     echo -e "  ${WHITE}[6]${NC} 🔄 Update Script"
+    echo -e "  ${WHITE}[7]${NC} 🗑  Uninstall Script"
     echo -e "  ${WHITE}[0]${NC} 👋 Quit"
     echo -e ""
     read -s -n 1 key
-    case $key in 1) launch_detached ;; 2) create_new_device ;; 3) dev_menu ;; 4) toolbox_menu ;; 5) install_sdk ;; 6) update_script ;; 0|q|$'\e') cleanup ;; esac
+    case $key in 1) launch_detached ;; 2) create_new_device ;; 3) dev_menu ;; 4) toolbox_menu ;; 5) install_sdk ;; 6) update_script ;; 7) uninstall_script ;; 0|q|$'\e') cleanup ;; esac
 done
