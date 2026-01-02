@@ -65,5 +65,3 @@ The script requires the following tools:
 
 It will automatically manage Android SDK components (`sdkmanager`, `avdmanager`, `adb`, `emulator`) once the base dependencies are met.
 
-## License
-MIT
